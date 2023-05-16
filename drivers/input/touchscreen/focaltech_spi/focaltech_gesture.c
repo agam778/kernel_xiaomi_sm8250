@@ -104,6 +104,15 @@ static struct fts_gesture_st fts_gesture_data;
 /*****************************************************************************
 * Static function prototypes
 *****************************************************************************/
+
+static inline ssize_t double_tap_pressed_get(struct device *device,
+                               struct device_attribute *attribute,
+                               char *buffer)
+{
+       struct fts_ts_data *ts = dev_get_drvdata(device);
+       return scnprintf(buffer, PAGE_SIZE, "%i\n", ts->double_tap_pressed);
+}
+
 static ssize_t fts_gesture_show(
 	struct device *dev, struct device_attribute *attr, char *buf)
 {
@@ -175,6 +184,13 @@ static ssize_t fts_gesture_buf_store(
 }
 
 
+/* sysfs double tap pressed node
+ *   read example: cat double_tap_pressed        --- read double tap pressed state
+ */
+static DEVICE_ATTR(double_tap_pressed, S_IRUGO,
+                   double_tap_pressed_get, NULL);
+
+
 /* sysfs gesture node
  *   read example: cat  fts_gesture_mode       ---read gesture mode
  *   write example:echo 1 > fts_gesture_mode   --- write gesture mode to 1
@@ -191,6 +207,7 @@ static DEVICE_ATTR(fts_gesture_buf, S_IRUGO | S_IWUSR,
 static struct attribute *fts_gesture_mode_attrs[] = {
 	&dev_attr_fts_gesture_mode.attr,
 	&dev_attr_fts_gesture_buf.attr,
+	&dev_attr_double_tap_pressed.attr,
 	NULL,
 };
 
@@ -241,6 +258,9 @@ static int fts_create_gesture_sysfs(struct device *dev)
 static void fts_gesture_report(struct input_dev *input_dev, int gesture_id)
 {
 	int gesture;
+
+	fts_data->double_tap_pressed = (gesture_id == GESTURE_DOUBLECLICK) ? 1 : 0;
+    sysfs_notify(&fts_data->client->dev.kobj, NULL, "double_tap_pressed");
 
 	FTS_DEBUG("gesture_id:0x%x", gesture_id);
 	switch (gesture_id) {

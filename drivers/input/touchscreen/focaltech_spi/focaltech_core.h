@@ -227,6 +227,7 @@ struct fts_ts_data {
 #endif
 #if defined(CONFIG_DRM)
 	struct notifier_block fb_notif;
+	int double_tap_pressed;
 #elif defined(CONFIG_HAS_EARLYSUSPEND)
 	struct early_suspend early_suspend;
 #endif
